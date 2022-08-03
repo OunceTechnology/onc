@@ -1,15 +1,16 @@
 import auto from '@rollup/plugin-auto-install';
 import babel from '@rollup/plugin-babel';
 import resolve from '@rollup/plugin-node-resolve';
-import path from 'path';
-import pkg from './package.json';
+import path from 'node:path';
+import package_ from './package.json';
+import process from 'node:process'
 
-const dependencies = pkg.dependencies || {};
-const env = process.env.BROWSERSLIST_ENV || 'defaults';
-const extraPath = env === 'defaults' ? '.fallback' : '';
+const dependencies = package_.dependencies || {};
+const environment = process.env.BROWSERSLIST_ENV || 'defaults';
+const extraPath = environment === 'defaults' ? '.fallback' : '';
 
-const dirname = path.dirname(pkg.main);
-const basename = path.basename(pkg.main, '.js');
+const dirname = path.dirname(package_.main);
+const basename = path.basename(package_.main, '.js');
 
 const filename = path.join(dirname, `${basename}${extraPath}.js`);
 export default {
