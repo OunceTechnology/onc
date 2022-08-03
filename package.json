@@ -1,6 +1,6 @@
 {
   "name": "@ounce/onc",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Ounce utilities",
   "main": "dist/onc.esm.js",
   "module": "src/index.js",
