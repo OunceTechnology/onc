@@ -1,9 +1,7 @@
-'use strict';
 const _self = typeof self !== 'undefined' ? self : window;
 
-const _testUrl = apppath => {
-  apppath = apppath || '';
-  return `${apppath}/favicon.ico?_=${Math.floor(Math.random() * 1000000000)}`;
+const _testUrl = (apppath = '') => {
+  return `${apppath}/favicon.ico?_=${Math.floor(Math.random() * 1_000_000_000)}`;
 };
 
 const _responseTimeout = 5000;
@@ -33,7 +31,7 @@ function initWindowListeners(callback) {
 
 function nextDelay(currentDelay) {
   // 1.5 * current delay capped at 1hour
-  return Math.min(Math.ceil(currentDelay * 1.5), 3600000);
+  return Math.min(Math.ceil(currentDelay * 1.5), 3_600_000);
 }
 
 const Reconnect = {
@@ -60,7 +58,7 @@ const Reconnect = {
   },
 
   checkComms() {
-    checkFetch(null, this.apppath)
+    checkFetch(undefined, this.apppath)
       .then(() => this.markUp())
       .catch(() => this.markDown());
   },
@@ -85,12 +83,10 @@ const Reconnect = {
   },
 
   markDown() {
-    if (this.enabled) {
-      if (this.state === 'connecting') {
-        this.state = 'waiting';
-        this.remaining = this.delay = nextDelay(this.delay);
-        return;
-      }
+    if (this.enabled && this.state === 'connecting') {
+      this.state = 'waiting';
+      this.remaining = this.delay = nextDelay(this.delay);
+      return;
     }
     if (this.state === 'down') {
       return;

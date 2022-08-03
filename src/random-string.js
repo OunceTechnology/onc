@@ -13,17 +13,17 @@ const _random = {
   },
 };
 
-const RandomString = {
-  init(total, risk) {
-    _instance = Object.create(_random).setup(total, risk);
-  },
+export function init(total, risk) {
+  _instance = Object.create(_random).setup(total, risk);
+}
 
-  string() {
-    if (!_instance) {
-      RandomString.init();
-    }
-    return _instance.string();
-  },
-};
-
-export default RandomString;
+/**
+ *
+ * @returns {string} A random string
+ */
+export function string() {
+  if (!_instance) {
+    init();
+  }
+  return _instance.string();
+}

@@ -1,33 +1,35 @@
-const _now = (function(self) {
-  'use strict';
-
+const _now = (function (self) {
   return self.performance && self.performance.now
-    ? function() {
+    ? function () {
         return self.performance.now();
       }
-    : function() {
+    : function () {
         return Date.now();
       };
 })(typeof self !== 'undefined' ? self : window);
 
-// function now() {
-//   return _now();
-// }
-
 export class ElapsedTimer {
+  /**
+   * Start the timer
+   */
   start() {
     this.startDate = new Date();
     this.startTime = _now();
   }
 
-  elapsed(precision) {
-    if (precision === undefined) {
-      precision = 2;
-    }
-
-    return Number((_now() - this.startTime).toFixed(precision));
+  /**
+   *
+   * @param {Number} precision
+   * @returns {Number} Elapsed time (ms) to precision decimal places
+   */
+  elapsed(precision = 2) {
+    return Number(this.elapsedFull().toFixed(precision));
   }
 
+  /**
+   *
+   * @returns Elapsed time in ms
+   */
   elapsedFull() {
     return _now() - this.startTime;
   }

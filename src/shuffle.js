@@ -50,3 +50,5 @@ export default {
   setRng,
   rng,
 };
+
+export { setRng, rng, getRandomSubarray, getRandomSubarrayAlt };

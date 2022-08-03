@@ -1,5 +1,3 @@
-'use strict';
-
 export const RBAC = {
   init(roles) {
     // If not a function then should be object
@@ -7,6 +5,7 @@ export const RBAC = {
       throw new TypeError('Expected input to be function or object');
     }
 
+    // eslint-disable-next-line unicorn/no-array-reduce
     const map = Object.keys(roles).reduce((map, role) => {
       map[role] = {
         can: {},
@@ -23,7 +22,7 @@ export const RBAC = {
         }
 
         map[role].inherits = [];
-        roles[role].inherits.forEach(function(child) {
+        for (const child of roles[role].inherits) {
           if (typeof child !== 'string') {
             throw new TypeError(`Expected roles[${role}].inherits element`);
           }
@@ -32,25 +31,25 @@ export const RBAC = {
             throw new TypeError(`Undefined inheritance role: ${child}`);
           }
           map[role].inherits.push(child);
-        });
+        }
       }
 
       // Iterate allowed operations
-      roles[role].can.forEach(function(operation) {
+      for (const operation of roles[role].can) {
         // If operation is string
         if (typeof operation === 'string') {
           // Add as an operation
           map[role].can[operation] = 1;
-          return;
+          continue;
         }
         // Check if operation has a .when function
         if (typeof operation.when === 'function' && typeof operation.name === 'string') {
           map[role].can[operation.name] = operation.when;
-          return;
+          continue;
         }
 
         throw new TypeError(`Unexpected operation type ${operation}`);
-      });
+      }
 
       return map;
     }, {});
@@ -62,11 +61,11 @@ export const RBAC = {
     return this;
   },
 
-  canSync(role, operation, params) {
+  canSync(role, operation, parameters) {
     // If not inited then wait until init finishes
     if (!this._inited) {
       return this._init.then(() => {
-        return this.can(role, operation, params);
+        return this.can(role, operation, parameters);
       });
     }
 
@@ -86,13 +85,13 @@ export const RBAC = {
     // IF this operation is not defined at current level try higher
     if (!$role.can[operation]) {
       // If no parents reject
-      if (!$role.inherits || $role.inherits.length < 1) {
+      if (!$role.inherits || $role.inherits.length === 0) {
         return false;
       }
 
       // Return if any parent resolves true or all reject
       return $role.inherits.some(parent => {
-        return this.canSync(parent, operation, params);
+        return this.canSync(parent, operation, parameters);
       });
     }
 
@@ -103,8 +102,8 @@ export const RBAC = {
 
     // Operation is conditional, run async function
     if (typeof $role.can[operation] === 'function') {
-      $role.can[operation](params, function(err, result) {
-        if (err) {
+      $role.can[operation](parameters, function (error, result) {
+        if (error) {
           return false;
         }
         if (!result) {
@@ -118,11 +117,11 @@ export const RBAC = {
     return false;
   },
 
-  can(role, operation, params) {
+  can(role, operation, parameters) {
     // If not inited then wait until init finishes
     if (!this._inited) {
       return this._init.then(() => {
-        return this.can(role, operation, params);
+        return this.can(role, operation, parameters);
       });
     }
 
@@ -144,19 +143,19 @@ export const RBAC = {
       // IF this operation is not defined at current level try higher
       if (!$role.can[operation]) {
         // If no parents reject
-        if (!$role.inherits || $role.inherits.length < 1) {
+        if (!$role.inherits || $role.inherits.length === 0) {
           return reject(new Error('unauthorized'));
         }
 
         // Return if any parent resolves true or all reject
         return Promise.all(
           $role.inherits.map(parent => {
-            return this.can(parent, operation, params)
+            return this.can(parent, operation, parameters)
               .then(() => true)
               .catch(() => false);
           }),
         ).then(result => {
-          if (result.some(r => r)) {
+          if (result.some(Boolean)) {
             resolve();
           } else {
             reject();
@@ -171,9 +170,9 @@ export const RBAC = {
 
       // Operation is conditional, run async function
       if (typeof $role.can[operation] === 'function') {
-        $role.can[operation](params, function(err, result) {
-          if (err) {
-            return reject(err);
+        $role.can[operation](parameters, function (error, result) {
+          if (error) {
+            return reject(error);
           }
           if (!result) {
             return reject(new Error('unauthorized'));

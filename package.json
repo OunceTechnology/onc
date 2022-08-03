@@ -4,12 +4,14 @@
   "description": "Ounce utilities",
   "main": "dist/onc.esm.js",
   "module": "src/index.js",
+  "types": "./types/index.d.ts",
   "scripts": {
     "build:rollup": "BROWSERSLIST_ENV=defaults rollup --config rollup.config.js",
     "build:rollup:evergreen": "BROWSERSLIST_ENV=evergreen rollup --config rollup.config.js",
     "develop": "webpack --mode development",
     "build": "npm version patch && cross-env NODE_ENV=production webpack --mode production",
-    "build:minor": "npm version minor && cross-env NODE_ENV=production webpack --mode production"
+    "build:minor": "npm version minor && cross-env NODE_ENV=production webpack --mode production",
+    "tsc": "del  -f ./types/* && tsc --noEmit false --emitDeclarationOnly true"
   },
   "repository": {
     "type": "git",
@@ -20,7 +22,6 @@
   ],
   "author": "philip",
   "license": "ISC",
-  "dependencies": {},
   "devDependencies": {
     "@babel/cli": "^7.8.4",
     "@babel/core": "^7.9.6",
@@ -43,13 +44,17 @@
     "clean-webpack-plugin": "^3.0.0",
     "core-js": "^3.6.5",
     "cross-env": "^7.0.2",
-    "eslint": "^7.0.0",
+    "del": "^7.0.0",
+    "del-cli": "^5.0.0",
+    "eslint": "^8.21.0",
     "eslint-config-google": "^0.14.0",
-    "eslint-plugin-promise": "^4.1.1",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-unicorn": "^43.0.2",
     "prettier": "^2.0.5",
     "rollup": "^2.10.2",
     "rollup-plugin-cleaner": "^1.0.0",
     "rollup-plugin-terser": "^5.3.0",
+    "typescript": "^4.7.4",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.0"
   },
@@ -71,6 +76,44 @@
       "last 2 Edge versions",
       "last 2 Opera versions"
     ]
+  },
+  "eslintConfig": {
+    "extends": [
+      "eslint:recommended",
+      "plugin:unicorn/recommended"
+    ],
+    "env": {
+      "browser": true
+    },
+    "rules": {
+      "no-else-return": 1,
+      "prefer-const": "error",
+      "no-var": "error",
+      "no-unused-vars": [
+        "error",
+        {
+          "ignoreRestSiblings": true
+        }
+      ],
+      "no-nested-ternary": "off",
+      "unicorn/no-nested-ternary": [
+        "off"
+      ],
+      "unicorn/number-literal-case": [
+        "off"
+      ],
+      "unicorn/prevent-abbreviations": [
+        "error",
+        {
+          "replacements": {
+            "props": false
+          },
+          "allowList": {
+            "i18n": true
+          }
+        }
+      ]
+    }
   },
   "prettier": {
     "semi": true,

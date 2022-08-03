@@ -1,9 +1,10 @@
-'use strict';
 let increment = 0;
-const pid = Math.floor(Math.random() * 32767);
-const machine = Math.floor(Math.random() * 16777216);
+const pid = Math.floor(Math.random() * 32_767);
+const machine = Math.floor(Math.random() * 16_777_216);
 
+// eslint-disable-next-line unicorn/no-document-cookie
 document.cookie = `mongoMachineId=;expires=${new Date().toUTCString()};path=/;domain=${location.hostname}`;
+
 if (typeof localStorage !== 'undefined') {
   localStorage.removeItem('mongoMachineId');
 }
@@ -34,8 +35,8 @@ const ID = {
   // private pid: number
   // private increment: number
 
-  setup(...args) {
-    const a0 = args[0];
+  setup(...arguments_) {
+    const a0 = arguments_[0];
 
     if (typeof a0 === 'object') {
       this.timestamp = a0.timestamp;
@@ -43,21 +44,21 @@ const ID = {
       this.pid = a0.pid;
       this.increment = a0.increment;
     } else if (typeof a0 === 'string' && a0.length === 24) {
-      this.timestamp = Number(`0x${a0.substr(0, 8)}`);
-      this.machine = Number(`0x${a0.substr(8, 6)}`);
-      this.pid = Number(`0x${a0.substr(14, 4)}`);
-      this.increment = Number(`0x${a0.substr(18, 6)}`);
+      this.timestamp = Number(`0x${a0.slice(0, 8)}`);
+      this.machine = Number(`0x${a0.slice(8, 14)}`);
+      this.pid = Number(`0x${a0.slice(14, 18)}`);
+      this.increment = Number(`0x${a0.slice(18, 24)}`);
     } else if (arguments.length === 4 && a0 !== null) {
       this.timestamp = a0;
-      this.machine = args[1];
-      this.pid = args[2];
-      this.increment = args[3];
+      this.machine = arguments_[1];
+      this.pid = arguments_[2];
+      this.increment = arguments_[3];
     } else {
-      this.timestamp = Math.floor(new Date().valueOf() / 1000);
+      this.timestamp = Math.floor(Date.now() / 1000);
       this.machine = machine;
       this.pid = pid;
       this.increment = increment++;
-      if (increment > 0xffffff) {
+      if (increment > 0xff_ff_ff) {
         increment = 0;
       }
     }
@@ -69,11 +70,11 @@ const ID = {
   },
 
   toArray() {
-    const strOid = this.toString();
+    const stringOid = this.toString();
     const array = [];
-    let i;
-    for (i = 0; i < 12; i++) {
-      array[i] = parseInt(strOid.slice(i * 2, i * 2 + 2), 16);
+    let index;
+    for (index = 0; index < 12; index++) {
+      array[index] = Number.parseInt(stringOid.slice(index * 2, index * 2 + 2), 16);
     }
     return array;
   },
@@ -84,20 +85,20 @@ const ID = {
     const pd = this.pid.toString(16);
     const incr = this.increment.toString(16);
     return (
-      '00000000'.substr(0, 8 - timestamp.length) +
+      '00000000'.slice(0, Math.max(0, 8 - timestamp.length)) +
       timestamp +
-      '000000'.substr(0, 6 - mach.length) +
+      '000000'.slice(0, Math.max(0, 6 - mach.length)) +
       mach +
-      '0000'.substr(0, 4 - pd.length) +
+      '0000'.slice(0, Math.max(0, 4 - pd.length)) +
       pd +
-      '000000'.substr(0, 6 - incr.length) +
+      '000000'.slice(0, Math.max(0, 6 - incr.length)) +
       incr
     );
   },
 };
 
-const objectID = function(args) {
-  return Object.create(ID).setup(args);
+const objectID = function (arguments_) {
+  return Object.create(ID).setup(arguments_);
 };
 
 export { objectID };
