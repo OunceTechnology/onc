@@ -3,7 +3,8 @@
   "version": "2.2.0",
   "description": "Ounce utilities",
   "main": "dist/onc.esm.js",
-  "module": "src/index.js",
+  "type": "module",
+  "exports": "./src/index.js",
   "types": "./types/index.d.ts",
   "scripts": {
     "build:rollup": "BROWSERSLIST_ENV=defaults rollup --config rollup.config.js",

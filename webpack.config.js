@@ -1,10 +1,12 @@
-const path = require('path');
-const pkg = require('./package.json');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+import { fileURLToPath } from 'node:url';
+// const package_ = require('./package.json');
 
-const resolve = relativePath => path.resolve(__dirname, relativePath);
+import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 
-module.exports = {
+const resolve = relativePath => fileURLToPath(new URL(relativePath, import.meta.url));
+const esbuildTarget = 'es2018';
+
+export default {
   entry: './src/index.js',
   devtool: 'source-map',
   output: {
@@ -21,22 +23,9 @@ module.exports = {
     rules: [
       {
         test: /\.js$/,
-        loader: 'babel-loader',
-        exclude: [/node_modules/],
+        loader: 'esbuild-loader',
         options: {
-          presets: [
-            [
-              '@babel/preset-env',
-              {
-                modules: false,
-                useBuiltIns: 'entry',
-                corejs: 3,
-                targets: {
-                  browsers: Object.values(pkg.browserslist.modernBrowsers),
-                },
-              },
-            ],
-          ],
+          target: esbuildTarget,
         },
       },
     ],
