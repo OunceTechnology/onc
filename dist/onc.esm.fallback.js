@@ -86,6 +86,44 @@ function _createClass(Constructor, protoProps, staticProps) {
   return Constructor;
 }
 
+function _slicedToArray(arr, i) {
+  return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
+}
+
+function _arrayWithHoles(arr) {
+  if (Array.isArray(arr)) return arr;
+}
+
+function _iterableToArrayLimit(arr, i) {
+  var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"];
+
+  if (_i == null) return;
+  var _arr = [];
+  var _n = true;
+  var _d = false;
+
+  var _s, _e;
+
+  try {
+    for (_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true) {
+      _arr.push(_s.value);
+
+      if (i && _arr.length === i) break;
+    }
+  } catch (err) {
+    _d = true;
+    _e = err;
+  } finally {
+    try {
+      if (!_n && _i["return"] != null) _i["return"]();
+    } finally {
+      if (_d) throw _e;
+    }
+  }
+
+  return _arr;
+}
+
 function _unsupportedIterableToArray(o, minLen) {
   if (!o) return;
   if (typeof o === "string") return _arrayLikeToArray(o, minLen);
@@ -101,6 +139,10 @@ function _arrayLikeToArray(arr, len) {
   for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
 
   return arr2;
+}
+
+function _nonIterableRest() {
+  throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
 }
 
 function _createForOfIteratorHelper(o, allowArrayLike) {
@@ -707,31 +749,38 @@ var randomString = /*#__PURE__*/Object.freeze({
   string: string
 });
 
-var RBAC = {
-  init: function init(roles) {
+var RBAC = /*#__PURE__*/function () {
+  function RBAC(roles) {
+    _classCallCheck(this, RBAC);
+
     // If not a function then should be object
     if (_typeof(roles) !== 'object') {
       throw new TypeError('Expected input to be function or object');
-    } // eslint-disable-next-line unicorn/no-array-reduce
+    }
 
+    var map = {};
 
-    var map = Object.keys(roles).reduce(function (map, role) {
+    for (var _i = 0, _Object$entries = Object.entries(roles); _i < _Object$entries.length; _i++) {
+      var _Object$entries$_i = _slicedToArray(_Object$entries[_i], 2),
+          role = _Object$entries$_i[0],
+          value = _Object$entries$_i[1];
+
       map[role] = {
         can: {}
       }; // Check can definition
 
-      if (!Array.isArray(roles[role].can)) {
+      if (!Array.isArray(value.can)) {
         throw new TypeError("Expected roles[".concat(role, "].can to be an array"));
       }
 
-      if (roles[role].inherits) {
-        if (!Array.isArray(roles[role].inherits)) {
+      if (value.inherits) {
+        if (!Array.isArray(value.inherits)) {
           throw new TypeError("Expected roles[".concat(role, "].inherits to be an array"));
         }
 
         map[role].inherits = [];
 
-        var _iterator = _createForOfIteratorHelper(roles[role].inherits),
+        var _iterator = _createForOfIteratorHelper(value.inherits),
             _step;
 
         try {
@@ -756,7 +805,7 @@ var RBAC = {
       } // Iterate allowed operations
 
 
-      var _iterator2 = _createForOfIteratorHelper(roles[role].can),
+      var _iterator2 = _createForOfIteratorHelper(value.can),
           _step2;
 
       try {
@@ -783,86 +832,23 @@ var RBAC = {
       } finally {
         _iterator2.f();
       }
+    } // Add roles to class and mark as inited
 
-      return map;
-    }, {}); // Add roles to class and mark as inited
 
     this.roles = map;
-    this._inited = true;
-    return this;
-  },
-  canSync: function canSync(role, operation, parameters) {
-    var _this = this;
-
-    // If not inited then wait until init finishes
-    if (!this._inited) {
-      return this._init.then(function () {
-        return _this.can(role, operation, parameters);
-      });
-    }
-
-    if (typeof role !== 'string') {
-      throw new TypeError('Expected first parameter to be string : role');
-    }
-
-    if (typeof operation !== 'string') {
-      throw new TypeError('Expected second parameter to be string : operation');
-    }
-
-    var $role = this.roles[role];
-
-    if (!$role) {
-      throw new Error('Undefined role');
-    } // IF this operation is not defined at current level try higher
+  }
+  /**
+   * @param {string } role
+   * @param {string} operation
+   * @param {any} parameters
+   */
 
 
-    if (!$role.can[operation]) {
-      // If no parents reject
-      if (!$role.inherits || $role.inherits.length === 0) {
-        return false;
-      } // Return if any parent resolves true or all reject
+  _createClass(RBAC, [{
+    key: "canSync",
+    value: function canSync(role, operation, parameters) {
+      var _this = this;
 
-
-      return $role.inherits.some(function (parent) {
-        return _this.canSync(parent, operation, parameters);
-      });
-    } // We have the operation resolve
-
-
-    if ($role.can[operation] === 1) {
-      return true;
-    } // Operation is conditional, run async function
-
-
-    if (typeof $role.can[operation] === 'function') {
-      $role.can[operation](parameters, function (error, result) {
-        if (error) {
-          return false;
-        }
-
-        if (!result) {
-          return false;
-        }
-
-        return true;
-      });
-      return;
-    } // No operation reject as false
-
-
-    return false;
-  },
-  can: function can(role, operation, parameters) {
-    var _this2 = this;
-
-    // If not inited then wait until init finishes
-    if (!this._inited) {
-      return this._init.then(function () {
-        return _this2.can(role, operation, parameters);
-      });
-    }
-
-    return new Promise(function (resolve, reject) {
       if (typeof role !== 'string') {
         throw new TypeError('Expected first parameter to be string : role');
       }
@@ -871,7 +857,7 @@ var RBAC = {
         throw new TypeError('Expected second parameter to be string : operation');
       }
 
-      var $role = _this2.roles[role];
+      var $role = this.roles[role];
 
       if (!$role) {
         throw new Error('Undefined role');
@@ -881,51 +867,111 @@ var RBAC = {
       if (!$role.can[operation]) {
         // If no parents reject
         if (!$role.inherits || $role.inherits.length === 0) {
-          return reject(new Error('unauthorized'));
+          return false;
         } // Return if any parent resolves true or all reject
 
 
-        return Promise.all($role.inherits.map(function (parent) {
-          return _this2.can(parent, operation, parameters).then(function () {
-            return true;
-          }).catch(function () {
-            return false;
-          });
-        })).then(function (result) {
-          if (result.some(Boolean)) {
-            resolve();
-          } else {
-            reject();
-          }
+        return $role.inherits.some(function (parent) {
+          return _this.canSync(parent, operation, parameters);
         });
       } // We have the operation resolve
 
 
       if ($role.can[operation] === 1) {
-        return resolve(true);
+        return true;
       } // Operation is conditional, run async function
 
 
       if (typeof $role.can[operation] === 'function') {
         $role.can[operation](parameters, function (error, result) {
           if (error) {
-            return reject(error);
+            return false;
           }
 
           if (!result) {
-            return reject(new Error('unauthorized'));
+            return false;
           }
 
-          resolve(true);
+          return true;
         });
         return;
       } // No operation reject as false
 
 
-      reject(false);
-    });
-  }
-};
+      return false;
+    }
+  }, {
+    key: "can",
+    value: function can(role, operation, parameters) {
+      var _this2 = this;
+
+      return new Promise(function (resolve, reject) {
+        if (typeof role !== 'string') {
+          throw new TypeError('Expected first parameter to be string : role');
+        }
+
+        if (typeof operation !== 'string') {
+          throw new TypeError('Expected second parameter to be string : operation');
+        }
+
+        var $role = _this2.roles[role];
+
+        if (!$role) {
+          throw new Error('Undefined role');
+        } // IF this operation is not defined at current level try higher
+
+
+        if (!$role.can[operation]) {
+          // If no parents reject
+          if (!$role.inherits || $role.inherits.length === 0) {
+            return reject(new Error('unauthorized'));
+          } // Return if any parent resolves true or all reject
+
+
+          return Promise.all($role.inherits.map(function (parent) {
+            return _this2.can(parent, operation, parameters).then(function () {
+              return true;
+            }).catch(function () {
+              return false;
+            });
+          })).then(function (result) {
+            if (result.some(Boolean)) {
+              resolve();
+            } else {
+              reject();
+            }
+          });
+        } // We have the operation resolve
+
+
+        if ($role.can[operation] === 1) {
+          return resolve(true);
+        } // Operation is conditional, run async function
+
+
+        if (typeof $role.can[operation] === 'function') {
+          $role.can[operation](parameters, function (error, result) {
+            if (error) {
+              return reject(error);
+            }
+
+            if (!result) {
+              return reject(new Error('unauthorized'));
+            }
+
+            resolve(true);
+          });
+          return;
+        } // No operation reject as false
+
+
+        reject(false);
+      });
+    }
+  }]);
+
+  return RBAC;
+}();
 
 var increment = 0;
 var pid = Math.floor(Math.random() * 32767);

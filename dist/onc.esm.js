@@ -557,31 +557,32 @@ var randomString = /*#__PURE__*/Object.freeze({
   string: string
 });
 
-const RBAC = {
-  init(roles) {
+class RBAC {
+  constructor(roles) {
     // If not a function then should be object
     if (typeof roles !== 'object') {
       throw new TypeError('Expected input to be function or object');
-    } // eslint-disable-next-line unicorn/no-array-reduce
+    }
 
+    const map = {};
 
-    const map = Object.keys(roles).reduce((map, role) => {
+    for (const [role, value] of Object.entries(roles)) {
       map[role] = {
         can: {}
       }; // Check can definition
 
-      if (!Array.isArray(roles[role].can)) {
+      if (!Array.isArray(value.can)) {
         throw new TypeError(`Expected roles[${role}].can to be an array`);
       }
 
-      if (roles[role].inherits) {
-        if (!Array.isArray(roles[role].inherits)) {
+      if (value.inherits) {
+        if (!Array.isArray(value.inherits)) {
           throw new TypeError(`Expected roles[${role}].inherits to be an array`);
         }
 
         map[role].inherits = [];
 
-        for (const child of roles[role].inherits) {
+        for (const child of value.inherits) {
           if (typeof child !== 'string') {
             throw new TypeError(`Expected roles[${role}].inherits element`);
           }
@@ -595,7 +596,7 @@ const RBAC = {
       } // Iterate allowed operations
 
 
-      for (const operation of roles[role].can) {
+      for (const operation of value.can) {
         // If operation is string
         if (typeof operation === 'string') {
           // Add as an operation
@@ -611,23 +612,19 @@ const RBAC = {
 
         throw new TypeError(`Unexpected operation type ${operation}`);
       }
+    } // Add roles to class and mark as inited
 
-      return map;
-    }, {}); // Add roles to class and mark as inited
 
     this.roles = map;
-    this._inited = true;
-    return this;
-  },
+  }
+  /**
+   * @param {string } role
+   * @param {string} operation
+   * @param {any} parameters
+   */
+
 
   canSync(role, operation, parameters) {
-    // If not inited then wait until init finishes
-    if (!this._inited) {
-      return this._init.then(() => {
-        return this.can(role, operation, parameters);
-      });
-    }
-
     if (typeof role !== 'string') {
       throw new TypeError('Expected first parameter to be string : role');
     }
@@ -678,16 +675,9 @@ const RBAC = {
 
 
     return false;
-  },
+  }
 
   can(role, operation, parameters) {
-    // If not inited then wait until init finishes
-    if (!this._inited) {
-      return this._init.then(() => {
-        return this.can(role, operation, parameters);
-      });
-    }
-
     return new Promise((resolve, reject) => {
       if (typeof role !== 'string') {
         throw new TypeError('Expected first parameter to be string : role');
@@ -748,7 +738,7 @@ const RBAC = {
     });
   }
 
-};
+}
 
 let increment = 0;
 const pid = Math.floor(Math.random() * 32_767);
