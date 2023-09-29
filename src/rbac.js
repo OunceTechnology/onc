@@ -1,28 +1,27 @@
-export const RBAC = {
-  init(roles) {
+export class RBAC {
+  constructor(roles) {
     // If not a function then should be object
     if (typeof roles !== 'object') {
       throw new TypeError('Expected input to be function or object');
     }
 
-    // eslint-disable-next-line unicorn/no-array-reduce
-    const map = Object.keys(roles).reduce((map, role) => {
-      map[role] = {
-        can: {},
-      };
+    const map = {};
+
+    for (const [role, value] of Object.entries(roles)) {
+      map[role] = { can: {} };
 
       // Check can definition
-      if (!Array.isArray(roles[role].can)) {
+      if (!Array.isArray(value.can)) {
         throw new TypeError(`Expected roles[${role}].can to be an array`);
       }
 
-      if (roles[role].inherits) {
-        if (!Array.isArray(roles[role].inherits)) {
+      if (value.inherits) {
+        if (!Array.isArray(value.inherits)) {
           throw new TypeError(`Expected roles[${role}].inherits to be an array`);
         }
 
         map[role].inherits = [];
-        for (const child of roles[role].inherits) {
+        for (const child of value.inherits) {
           if (typeof child !== 'string') {
             throw new TypeError(`Expected roles[${role}].inherits element`);
           }
@@ -35,7 +34,7 @@ export const RBAC = {
       }
 
       // Iterate allowed operations
-      for (const operation of roles[role].can) {
+      for (const operation of value.can) {
         // If operation is string
         if (typeof operation === 'string') {
           // Add as an operation
@@ -50,25 +49,18 @@ export const RBAC = {
 
         throw new TypeError(`Unexpected operation type ${operation}`);
       }
-
-      return map;
-    }, {});
+    }
 
     // Add roles to class and mark as inited
     this.roles = map;
-    this._inited = true;
+  }
 
-    return this;
-  },
-
+  /**
+   * @param {string } role
+   * @param {string} operation
+   * @param {any} parameters
+   */
   canSync(role, operation, parameters) {
-    // If not inited then wait until init finishes
-    if (!this._inited) {
-      return this._init.then(() => {
-        return this.can(role, operation, parameters);
-      });
-    }
-
     if (typeof role !== 'string') {
       throw new TypeError('Expected first parameter to be string : role');
     }
@@ -82,6 +74,7 @@ export const RBAC = {
     if (!$role) {
       throw new Error('Undefined role');
     }
+
     // IF this operation is not defined at current level try higher
     if (!$role.can[operation]) {
       // If no parents reject
@@ -115,16 +108,9 @@ export const RBAC = {
     }
     // No operation reject as false
     return false;
-  },
+  }
 
   can(role, operation, parameters) {
-    // If not inited then wait until init finishes
-    if (!this._inited) {
-      return this._init.then(() => {
-        return this.can(role, operation, parameters);
-      });
-    }
-
     return new Promise((resolve, reject) => {
       if (typeof role !== 'string') {
         throw new TypeError('Expected first parameter to be string : role');
@@ -184,5 +170,5 @@ export const RBAC = {
       // No operation reject as false
       reject(false);
     });
-  },
-};
+  }
+}
